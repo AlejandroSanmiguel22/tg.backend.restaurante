@@ -23,5 +23,13 @@
     "@types/node": "^22.15.30",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlejandroSanmiguel22/tg.backend.restaurante.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AlejandroSanmiguel22/tg.backend.restaurante/issues"
+  },
+  "homepage": "https://github.com/AlejandroSanmiguel22/tg.backend.restaurante#readme"
 }
