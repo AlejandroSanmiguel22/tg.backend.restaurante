@@ -1,8 +1,8 @@
-import { CreateproductDTO } from '../../application/dtos/CreateproductDTO'
-import { productRepository } from '../repositories/productRepository'
+import { CreateproductDTO } from '../../application/dtos/ProductDTO'
+import { productRepository } from '../repositories/ProductRepository'
 import { CategoryRepository } from '../repositories/CategoryRepository'
 import { CloudinaryAdapter } from '../../infrastructure/adapters/CloudinaryAdapter'
-import { product } from '../entities/product'
+import { Product } from '../entities/Product'
 
 export class CreateproductUseCase {
   constructor(
@@ -10,7 +10,7 @@ export class CreateproductUseCase {
     private readonly categoryRepo: CategoryRepository
   ) {}
 
-  async execute(input: CreateproductDTO): Promise<product> {
+  async execute(input: CreateproductDTO): Promise<Product> {
     const { name, description, categoryId, variants, imageBase64 } = input
 
     const category = await this.categoryRepo.findById(categoryId)

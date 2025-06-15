@@ -12,5 +12,4 @@
   "include": ["./**/*.ts"],
   "exclude": ["node_modules", "dist"],
   "typeRoots": ["./node_modules/@types", "./api/types"]
-
 }

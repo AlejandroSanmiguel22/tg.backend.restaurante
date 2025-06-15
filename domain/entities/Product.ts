@@ -3,7 +3,7 @@ export interface productVariant {
   price: number
 }
 
-export interface product {
+export interface Product {
   id: string
   name: string
   description: string
