@@ -1,12 +1,12 @@
-export interface DishVariantInput {
+export interface productVariantInput {
   name: string
   price: number
 }
 
-export interface CreateDishDTO {
+export interface CreateproductDTO {
   name: string
   description: string
   categoryId: string
-  variants: DishVariantInput[]
+  variants: productVariantInput[]
   imageBase64: string 
 }

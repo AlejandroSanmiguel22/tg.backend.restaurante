@@ -1,16 +1,16 @@
-export interface DishVariant {
+export interface productVariant {
   name: string
   price: number
 }
 
-export interface Dish {
+export interface product {
   id: string
   name: string
   description: string
   imageUrl: string
   categoryId: string
   isActive: boolean
-  variants: DishVariant[]
+  variants: productVariant[]
   createdAt?: Date
   updatedAt?: Date
 }

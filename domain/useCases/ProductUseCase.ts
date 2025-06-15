@@ -1,16 +1,16 @@
-import { CreateDishDTO } from '../../application/dtos/CreateDishDTO'
-import { DishRepository } from '../repositories/DishRepository'
+import { CreateproductDTO } from '../../application/dtos/CreateproductDTO'
+import { productRepository } from '../repositories/productRepository'
 import { CategoryRepository } from '../repositories/CategoryRepository'
 import { CloudinaryAdapter } from '../../infrastructure/adapters/CloudinaryAdapter'
-import { Dish } from '../entities/Dish'
+import { product } from '../entities/product'
 
-export class CreateDishUseCase {
+export class CreateproductUseCase {
   constructor(
-    private readonly dishRepo: DishRepository,
+    private readonly productRepo: productRepository,
     private readonly categoryRepo: CategoryRepository
   ) {}
 
-  async execute(input: CreateDishDTO): Promise<Dish> {
+  async execute(input: CreateproductDTO): Promise<product> {
     const { name, description, categoryId, variants, imageBase64 } = input
 
     const category = await this.categoryRepo.findById(categoryId)
@@ -20,7 +20,7 @@ export class CreateDishUseCase {
 
     const imageUrl = await CloudinaryAdapter.uploadImage(imageBase64)
 
-    const newDish = await this.dishRepo.create({
+    const newproduct = await this.productRepo.create({
       name,
       description,
       imageUrl,
@@ -29,6 +29,6 @@ export class CreateDishUseCase {
       variants
     })
 
-    return newDish
+    return newproduct
   }
 }

@@ -5,7 +5,7 @@ const VariantSchema = new Schema({
   price: { type: Number, required: true }
 }, { _id: false })
 
-const DishSchema = new Schema({
+const productSchema = new Schema({
   name: { type: String, required: true },
   description: { type: String },
   imageUrl: { type: String, required: true },
@@ -14,4 +14,4 @@ const DishSchema = new Schema({
   variants: [VariantSchema]
 }, { timestamps: true })
 
-export const DishModel = model('Dish', DishSchema)
+export const productModel = model('product', productSchema)
