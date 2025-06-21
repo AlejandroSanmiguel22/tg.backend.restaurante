@@ -1,17 +1,18 @@
 import { Router } from 'express';
 import { WaiterController } from '../controllers/WaiterController';
 import { WaiterRepositoryMongo } from '../../infrastructure/repositories/WaiterRepositoryMongo';
-import { isAdmin } from '../middlewares/authMiddleware';
+import { requireAuth } from '../middlewares/authMiddleware';
 
 const router = Router();
 
 const waiterRepository = new WaiterRepositoryMongo();
 const waiterController = new WaiterController(waiterRepository);
 
-router.post('/', isAdmin, waiterController.create.bind(waiterController));
-router.get('/', isAdmin, waiterController.findAll.bind(waiterController));
-router.get('/:id', isAdmin, waiterController.findById.bind(waiterController));
-router.put('/:id', isAdmin, waiterController.update.bind(waiterController));
-router.delete('/:id', isAdmin, waiterController.delete.bind(waiterController));
+// Todas las operaciones de meseros solo pueden ser realizadas por admins
+router.post('/', requireAuth(['admin']), waiterController.create.bind(waiterController));
+router.get('/', requireAuth(['admin']), waiterController.findAll.bind(waiterController));
+router.get('/:id', requireAuth(['admin']), waiterController.findById.bind(waiterController));
+router.put('/:id', requireAuth(['admin']), waiterController.update.bind(waiterController));
+router.delete('/:id', requireAuth(['admin']), waiterController.delete.bind(waiterController));
 
 export default router; 

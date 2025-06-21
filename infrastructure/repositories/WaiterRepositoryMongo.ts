@@ -51,7 +51,7 @@ export class WaiterRepositoryMongo implements WaiterRepository {
             identificationNumber: waiter.identificationNumber,
             phoneNumber: waiter.phoneNumber,
             userName: waiter.userName,
-            password: waiter.password, // La contraseña se mantiene sin hashear
+            password: waiter.password, // Se mantiene para el login, pero no se debe mostrar en respuestas
             createdAt: waiter.createdAt,
             updatedAt: waiter.updatedAt
         };
