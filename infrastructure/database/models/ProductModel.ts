@@ -10,6 +10,7 @@ const productSchema = new Schema({
   description: { type: String },
   imageUrl: { type: String, required: true },
   categoryId: { type: Schema.Types.ObjectId, required: true, ref: 'Category' },
+  price: { type: Number, required: true },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true })
 

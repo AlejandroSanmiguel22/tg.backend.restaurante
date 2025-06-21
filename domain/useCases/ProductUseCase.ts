@@ -11,7 +11,7 @@ export class CreateproductUseCase {
   ) {}
 
   async execute(input: CreateproductDTO): Promise<Product> {
-    const { name, description, categoryId, imageBase64 } = input
+    const { name, description, categoryId, price, imageBase64 } = input
 
     const category = await this.categoryRepo.findById(categoryId)
     if (!category) {
@@ -25,6 +25,7 @@ export class CreateproductUseCase {
       description,
       imageUrl,
       categoryId,
+      price,
       isActive: true,
     })
 

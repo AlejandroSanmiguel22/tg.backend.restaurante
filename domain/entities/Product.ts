@@ -9,6 +9,7 @@ export interface Product {
   description: string
   imageUrl: string
   categoryId: string
+  price: number
   isActive: boolean
   createdAt?: Date
   updatedAt?: Date
