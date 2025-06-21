@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import express from 'express'
 import cors from 'cors'
-import { connectToMongo } from './infrastructure/database/mongoConnection'
+import { connectDB } from './infrastructure/database/mongoConnection'
 import { setupRoutes } from './api'
 
 dotenv.config()
@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
 setupRoutes(app)
 
 // Conexión a la base de datos y arranque del servidor
-connectToMongo()
+connectDB()
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Servidor escuchando en http://localhost:${PORT}`)

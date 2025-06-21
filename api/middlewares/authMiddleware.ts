@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
 import { JwtAdapter } from '../../infrastructure/adapters/JwtAdapter'
-import jwt from 'jsonwebtoken'
 
 export const requireAuth = (roles: string[] = []) => {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -13,8 +12,18 @@ export const requireAuth = (roles: string[] = []) => {
     const token = authHeader.split(' ')[1]
     try {
       const payload = JwtAdapter.verify(token)
+      
+      // Verificar que el usuario tenga un rol válido
+      if (!payload.role) {
+        res.status(401).json({ message: 'Token inválido: rol no especificado' })
+        return
+      }
+
+      // Si se especifican roles, verificar que el usuario tenga uno de ellos
       if (roles.length > 0 && !roles.includes(payload.role)) {
-        res.status(403).json({ message: 'Acceso no autorizado' })
+        res.status(403).json({ 
+          message: `Acceso denegado. Roles permitidos: ${roles.join(', ')}. Tu rol: ${payload.role}` 
+        })
         return
       }
 
@@ -27,25 +36,50 @@ export const requireAuth = (roles: string[] = []) => {
   }
 }
 
+// Middleware específico para admin (mantener compatibilidad)
 export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
         
         if (!token) {
-            res.status(401).json({ message: 'No token provided' });
+            res.status(401).json({ message: 'Token no proporcionado' });
             return;
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+        const decoded = JwtAdapter.verify(token);
         
         if (decoded.role !== 'admin') {
-            res.status(403).json({ message: 'Access denied. Admin role required' });
+            res.status(403).json({ message: 'Acceso denegado. Se requiere rol de administrador' });
             return;
         }
 
         req.user = decoded;
         next();
     } catch (error) {
-        res.status(401).json({ message: 'Invalid token' });
+        res.status(401).json({ message: 'Token inválido' });
+    }
+};
+
+// Middleware específico para meseros
+export const isWaiter = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            res.status(401).json({ message: 'Token no proporcionado' });
+            return;
+        }
+
+        const decoded = JwtAdapter.verify(token);
+        
+        if (decoded.role !== 'mesero') {
+            res.status(403).json({ message: 'Acceso denegado. Se requiere rol de mesero' });
+            return;
+        }
+
+        req.user = decoded;
+        next();
+    } catch (error) {
+        res.status(401).json({ message: 'Token inválido' });
     }
 };

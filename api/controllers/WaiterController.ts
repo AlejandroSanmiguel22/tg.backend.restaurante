@@ -18,8 +18,15 @@ export class WaiterController {
             res.status(201).json({
                 message: 'Mesero creado correctamente',
                 data: {
-                    ...waiter,
-                    password: waiter.password 
+                    id: waiter.id,
+                    firstName: waiter.firstName,
+                    lastName: waiter.lastName,
+                    identificationNumber: waiter.identificationNumber,
+                    phoneNumber: waiter.phoneNumber,
+                    userName: waiter.userName,
+                    password: waiter.password,
+                    createdAt: waiter.createdAt,
+                    updatedAt: waiter.updatedAt
                 }
             });
         } catch (error) {
@@ -34,7 +41,14 @@ export class WaiterController {
             const waiters = await this.waiterRepository.findAll();
             res.status(200).json({
                 data: waiters.map(waiter => ({
-                    ...waiter
+                    id: waiter.id,
+                    firstName: waiter.firstName,
+                    lastName: waiter.lastName,
+                    identificationNumber: waiter.identificationNumber,
+                    phoneNumber: waiter.phoneNumber,
+                    userName: waiter.userName,
+                    createdAt: waiter.createdAt,
+                    updatedAt: waiter.updatedAt
                 }))
             });
         } catch (error) {
@@ -58,7 +72,14 @@ export class WaiterController {
 
             res.status(200).json({
                 data: {
-                    ...waiter
+                    id: waiter.id,
+                    firstName: waiter.firstName,
+                    lastName: waiter.lastName,
+                    identificationNumber: waiter.identificationNumber,
+                    phoneNumber: waiter.phoneNumber,
+                    userName: waiter.userName,
+                    createdAt: waiter.createdAt,
+                    updatedAt: waiter.updatedAt
                 }
             });
         } catch (error) {
@@ -85,7 +106,14 @@ export class WaiterController {
             res.status(200).json({
                 message: 'Mesero actualizado correctamente',
                 data: {
-                    ...updatedWaiter
+                    id: updatedWaiter.id,
+                    firstName: updatedWaiter.firstName,
+                    lastName: updatedWaiter.lastName,
+                    identificationNumber: updatedWaiter.identificationNumber,
+                    phoneNumber: updatedWaiter.phoneNumber,
+                    userName: updatedWaiter.userName,
+                    createdAt: updatedWaiter.createdAt,
+                    updatedAt: updatedWaiter.updatedAt
                 }
             });
         } catch (error) {
