@@ -10,7 +10,6 @@ export interface Product {
   imageUrl: string
   categoryId: string
   isActive: boolean
-  variants: productVariant[]
   createdAt?: Date
   updatedAt?: Date
 }
