@@ -12,7 +12,6 @@ export class productRepositoryMongo implements productRepository {
             imageUrl: created.imageUrl,
             categoryId: created.categoryId.toString(),
             isActive: created.isActive,
-            variants: created.variants,
             createdAt: created.createdAt,
             updatedAt: created.updatedAt
         }
@@ -28,7 +27,6 @@ export class productRepositoryMongo implements productRepository {
             imageUrl: product.imageUrl,
             categoryId: product.categoryId.toString(),
             isActive: product.isActive,
-            variants: product.variants,
             createdAt: product.createdAt,
             updatedAt: product.updatedAt
         }
@@ -42,7 +40,6 @@ export class productRepositoryMongo implements productRepository {
             imageUrl: product.imageUrl,
             categoryId: product.categoryId.toString(),
             isActive: product.isActive,
-            variants: product.variants,
             createdAt: product.createdAt,
             updatedAt: product.updatedAt
         }))
@@ -55,8 +52,7 @@ export class productRepositoryMongo implements productRepository {
                 description: product.description,
                 imageUrl: product.imageUrl,
                 categoryId: product.categoryId,
-                isActive: product.isActive,
-                variants: product.variants
+                isActive: product.isActive
             },
             { new: true }
         )
@@ -68,7 +64,6 @@ export class productRepositoryMongo implements productRepository {
             imageUrl: updated.imageUrl,
             categoryId: updated.categoryId.toString(),
             isActive: updated.isActive,
-            variants: updated.variants,
             createdAt: updated.createdAt,
             updatedAt: updated.updatedAt
         }
@@ -86,7 +81,6 @@ export class productRepositoryMongo implements productRepository {
             imageUrl: product.imageUrl ?? '',
             categoryId: product.categoryId.toString(),
             isActive: product.isActive,
-            variants: product.variants,
             createdAt: product.createdAt,
             updatedAt: product.updatedAt
         }))
@@ -100,7 +94,6 @@ export class productRepositoryMongo implements productRepository {
             imageUrl: product.imageUrl ?? '',
             categoryId: product.categoryId.toString(),
             isActive: product.isActive,
-            variants: product.variants,
             createdAt: product.createdAt,
             updatedAt: product.updatedAt
         }))
@@ -115,7 +108,6 @@ export class productRepositoryMongo implements productRepository {
             imageUrl: product.imageUrl ?? '',
             categoryId: product.categoryId.toString(),
             isActive: product.isActive,
-            variants: product.variants,
             createdAt: product.createdAt,
             updatedAt: product.updatedAt
 

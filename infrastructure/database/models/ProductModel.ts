@@ -11,7 +11,6 @@ const productSchema = new Schema({
   imageUrl: { type: String, required: true },
   categoryId: { type: Schema.Types.ObjectId, required: true, ref: 'Category' },
   isActive: { type: Boolean, default: true },
-  variants: [VariantSchema]
 }, { timestamps: true })
 
 export const productModel = model('product', productSchema)
