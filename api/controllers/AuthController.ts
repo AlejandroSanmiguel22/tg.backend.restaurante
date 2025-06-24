@@ -7,6 +7,15 @@ const userRepo = new UserRepositoryMongo()
 const waiterRepo = new WaiterRepositoryMongo()
 const loginUseCase = new LoginUseCase(userRepo, waiterRepo)
 
+interface Table {
+  id: string
+  number: number
+  status: 'libre' | 'atendida'
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
 export class AuthController {
   static async login(req: Request, res: Response) {
     try {
