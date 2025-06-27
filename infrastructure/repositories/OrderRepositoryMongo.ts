@@ -44,6 +44,27 @@ export class OrderRepositoryMongo implements OrderRepository {
     return orders.map(this.mapToEntity)
   }
 
+  async findByDateRange(startDate: Date, endDate: Date): Promise<Order[]> {
+    const orders = await OrderModel.find({
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    }).sort({ createdAt: -1 })
+    return orders.map(this.mapToEntity)
+  }
+
+  async findByWaiterAndDateRange(waiterId: string, startDate: Date, endDate: Date): Promise<Order[]> {
+    const orders = await OrderModel.find({
+      waiterId,
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    }).sort({ createdAt: -1 })
+    return orders.map(this.mapToEntity)
+  }
+
   async update(id: string, order: Partial<Order>): Promise<Order | null> {
     const updatedOrder = await OrderModel.findByIdAndUpdate(
       id,

@@ -8,6 +8,8 @@ export interface OrderRepository {
   findByWaiterId(waiterId: string): Promise<Order[]>
   findByStatus(status: OrderStatus): Promise<Order[]>
   findActive(): Promise<Order[]>
+  findByDateRange(startDate: Date, endDate: Date): Promise<Order[]>
+  findByWaiterAndDateRange(waiterId: string, startDate: Date, endDate: Date): Promise<Order[]>
   update(id: string, order: Partial<Order>): Promise<Order | null>
   updateStatus(id: string, status: OrderStatus): Promise<Order | null>
   addItem(id: string, item: Order['items'][0]): Promise<Order | null>
