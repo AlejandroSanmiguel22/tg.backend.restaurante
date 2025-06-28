@@ -7,8 +7,8 @@ export class RedisAdapter {
   private static isInitializing = false
 
   private constructor() {
-    console.log('🔧 Creando nueva instancia de RedisAdapter...')
-    console.log(`📍 Configuración Redis - Host: ${REDIS_HOST}, Port: ${REDIS_PORT}, DB: ${REDIS_DB}`)
+    console.log('Creando nueva instancia de RedisAdapter...')
+    console.log(`Configuración Redis - Host: ${REDIS_HOST}, Port: ${REDIS_PORT}, DB: ${REDIS_DB}`)
     
     // Configuración básica de Redis
     const redisConfig: any = {
@@ -22,12 +22,12 @@ export class RedisAdapter {
     // Solo agregar contraseña si está definida y no está vacía
     if (REDIS_PASSWORD && REDIS_PASSWORD.trim() !== '') {
       redisConfig.password = REDIS_PASSWORD
-      console.log('🔐 Redis configurado con contraseña')
+      console.log('Redis configurado con contraseña')
     } else {
-      console.log('🔓 Redis configurado sin contraseña (modo desarrollo)')
+      console.log('Redis configurado sin contraseña (modo desarrollo)')
     }
 
-    console.log('📋 Configuración final de Redis:', JSON.stringify(redisConfig, null, 2))
+    console.log('Configuración final de Redis:', JSON.stringify(redisConfig, null, 2))
 
     this.client = createClient(redisConfig)
 
@@ -51,7 +51,7 @@ export class RedisAdapter {
 
   public static getInstance(): RedisAdapter {
     if (RedisAdapter.isInitializing) {
-      console.log('⚠️ RedisAdapter ya se está inicializando...')
+      console.log('RedisAdapter ya se está inicializando...')
       while (RedisAdapter.isInitializing) {
         // Esperar a que termine la inicialización
       }
@@ -59,13 +59,13 @@ export class RedisAdapter {
     }
 
     if (!RedisAdapter.instance) {
-      console.log('🆕 Creando primera instancia de RedisAdapter...')
+      console.log('Creando primera instancia de RedisAdapter...')
       RedisAdapter.isInitializing = true
       RedisAdapter.instance = new RedisAdapter()
       RedisAdapter.isInitializing = false
-      console.log('✅ Instancia de RedisAdapter creada exitosamente')
+      console.log('Instancia de RedisAdapter creada exitosamente')
     } else {
-      console.log('♻️ Reutilizando instancia existente de RedisAdapter')
+      console.log('Reutilizando instancia existente de RedisAdapter')
     }
     
     return RedisAdapter.instance
@@ -73,16 +73,16 @@ export class RedisAdapter {
 
   async connect(): Promise<void> {
     if (!this.client.isOpen) {
-      console.log('🔌 Conectando a Redis...')
+      console.log('Conectando a Redis...')
       try {
         await this.client.connect()
-        console.log('✅ Conexión a Redis establecida exitosamente')
+        console.log('Conexión a Redis establecida exitosamente')
       } catch (error) {
-        console.error('❌ Error conectando a Redis:', error)
+        console.error('Error conectando a Redis:', error)
         throw error
       }
     } else {
-      console.log('🔗 Redis ya está conectado')
+      console.log('Redis ya está conectado')
     }
   }
 
@@ -96,10 +96,10 @@ export class RedisAdapter {
     await this.connect()
     if (ttl) {
       await this.client.setEx(key, ttl, value)
-      console.log(`🔴 Cache SET: ${key} (TTL: ${ttl}s)`)
+      console.log(`Cache SET: ${key} (TTL: ${ttl}s)`)
     } else {
       await this.client.set(key, value)
-      console.log(`🔴 Cache SET: ${key} (sin TTL)`)
+      console.log(`Cache SET: ${key} (sin TTL)`)
     }
   }
 
@@ -107,9 +107,9 @@ export class RedisAdapter {
     await this.connect()
     const value = await this.client.get(key)
     if (value) {
-      console.log(`🟢 Cache HIT: ${key}`)
+      console.log(`Cache HIT: ${key}`)
     } else {
-      console.log(`🟡 Cache MISS: ${key}`)
+      console.log(`Cache MISS: ${key}`)
     }
     return value
   }
@@ -118,9 +118,9 @@ export class RedisAdapter {
     await this.connect()
     const result = await this.client.del(key)
     if (result > 0) {
-      console.log(`🗑️ Cache DELETED: ${key}`)
+      console.log(`Cache DELETED: ${key}`)
     } else {
-      console.log(`⚠️ Cache NOT FOUND: ${key}`)
+      console.log(`Cache NOT FOUND: ${key}`)
     }
     return result
   }

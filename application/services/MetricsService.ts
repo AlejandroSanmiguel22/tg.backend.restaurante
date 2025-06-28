@@ -49,7 +49,7 @@ export class MetricsService {
         }
       }
 
-      console.log(`❌ Cache MISS para: ${cacheKey}`)
+      console.log(`Cache MISS para: ${cacheKey}`)
       const result = await calculateFn()
       const dataToCache = {
         ...result,
@@ -57,7 +57,7 @@ export class MetricsService {
       }
       
       await this.redis.set(cacheKey, JSON.stringify(dataToCache), ttl)
-      console.log(`💾 Cache guardado para: ${cacheKey} (TTL: ${ttl}s)`)
+      console.log(`Cache guardado para: ${cacheKey} (TTL: ${ttl}s)`)
       
       return {
         ...result,
