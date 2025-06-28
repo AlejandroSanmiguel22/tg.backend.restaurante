@@ -9,19 +9,21 @@ export class RedisAdapter {
   private constructor() {
     console.log('Creando nueva instancia de RedisAdapter...')
     console.log(`Configuración Redis - Host: ${REDIS_HOST}, Port: ${REDIS_PORT}, DB: ${REDIS_DB}`)
-    
+
     this.client = createClient({
       url: `redis://default:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}`,
       database: REDIS_DB,
       socket: {
         host: REDIS_HOST,
         port: REDIS_PORT,
-        tls: true,                       
-        reconnectStrategy: () => 1_000,
+        tls: true,
+        reconnectStrategy: () => 1000,
       },
-    });
-    
-    this.client.on('error', (err) => console.error('Redis error:', err));
+    })
+
+    this.client.on('error', (err) => {
+      console.error('Redis error:', err)
+    })
 
     this.client.on('connect', () => {
       console.log('Redis Client Connected')
@@ -34,43 +36,26 @@ export class RedisAdapter {
     this.client.on('end', () => {
       console.log('Redis Client Disconnected')
     })
+
+    // Conexión automática al crear la instancia
+    this.client.connect()
+      .then(() => console.log('✅ Redis conectado correctamente desde constructor'))
+      .catch((err) => console.error('❌ Error conectando a Redis:', err))
   }
 
   public static getInstance(): RedisAdapter {
     if (RedisAdapter.isInitializing) {
-      console.log('RedisAdapter ya se está inicializando...')
-      while (RedisAdapter.isInitializing) {
-        // Esperar a que termine la inicialización
-      }
+      while (RedisAdapter.isInitializing) {}
       return RedisAdapter.instance!
     }
 
     if (!RedisAdapter.instance) {
-      console.log('Creando primera instancia de RedisAdapter...')
       RedisAdapter.isInitializing = true
       RedisAdapter.instance = new RedisAdapter()
       RedisAdapter.isInitializing = false
-      console.log('Instancia de RedisAdapter creada exitosamente')
-    } else {
-      console.log('Reutilizando instancia existente de RedisAdapter')
     }
-    
-    return RedisAdapter.instance
-  }
 
-  async connect(): Promise<void> {
-    if (!this.client.isOpen) {
-      console.log('Conectando a Redis...')
-      try {
-        await this.client.connect()
-        console.log('Conexión a Redis establecida exitosamente')
-      } catch (error) {
-        console.error('Error conectando a Redis:', error)
-        throw error
-      }
-    } else {
-      console.log('Redis ya está conectado')
-    }
+    return RedisAdapter.instance
   }
 
   async disconnect(): Promise<void> {
@@ -80,65 +65,42 @@ export class RedisAdapter {
   }
 
   async set(key: string, value: string, ttl?: number): Promise<void> {
-    await this.connect()
     if (ttl) {
       await this.client.setEx(key, ttl, value)
-      console.log(`Cache SET: ${key} (TTL: ${ttl}s)`)
     } else {
       await this.client.set(key, value)
-      console.log(`Cache SET: ${key} (sin TTL)`)
     }
   }
 
   async get(key: string): Promise<string | null> {
-    await this.connect()
-    const value = await this.client.get(key)
-    if (value) {
-      console.log(`Cache HIT: ${key}`)
-    } else {
-      console.log(`Cache MISS: ${key}`)
-    }
-    return value
+    return await this.client.get(key)
   }
 
   async del(key: string): Promise<number> {
-    await this.connect()
-    const result = await this.client.del(key)
-    if (result > 0) {
-      console.log(`Cache DELETED: ${key}`)
-    } else {
-      console.log(`Cache NOT FOUND: ${key}`)
-    }
-    return result
+    return await this.client.del(key)
   }
 
   async incr(key: string): Promise<number> {
-    await this.connect()
     return await this.client.incr(key)
   }
 
   async hset(key: string, field: string, value: string): Promise<number> {
-    await this.connect()
     return await this.client.hSet(key, field, value)
   }
 
   async hget(key: string, field: string): Promise<string | null> {
-    await this.connect()
     return await this.client.hGet(key, field)
   }
 
   async hgetall(key: string): Promise<Record<string, string>> {
-    await this.connect()
     return await this.client.hGetAll(key)
   }
 
   async zadd(key: string, score: number, member: string): Promise<number> {
-    await this.connect()
     return await this.client.zAdd(key, { score, value: member })
   }
 
   async zrange(key: string, start: number, stop: number, withScores = false): Promise<string[]> {
-    await this.connect()
     if (withScores) {
       const result = await this.client.zRangeWithScores(key, start, stop, { REV: true })
       return result.map(item => `${item.value}:${item.score}`)
@@ -148,13 +110,11 @@ export class RedisAdapter {
   }
 
   async expire(key: string, seconds: number): Promise<boolean> {
-    await this.connect()
     const result = await this.client.expire(key, seconds)
     return result === 1
   }
 
   async exists(key: string): Promise<number> {
-    await this.connect()
     return await this.client.exists(key)
   }
-} 
+}
