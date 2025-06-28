@@ -10,31 +10,18 @@ export class RedisAdapter {
     console.log('Creando nueva instancia de RedisAdapter...')
     console.log(`Configuración Redis - Host: ${REDIS_HOST}, Port: ${REDIS_PORT}, DB: ${REDIS_DB}`)
     
-    // Configuración básica de Redis
-    const redisConfig: any = {
+    this.client = createClient({
+      url: `redis://default:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}`,
+      database: REDIS_DB,
       socket: {
         host: REDIS_HOST,
-        port: REDIS_PORT
+        port: REDIS_PORT,
+        tls: true,                       
+        reconnectStrategy: () => 1_000,
       },
-      database: REDIS_DB
-    }
-
-    // Solo agregar contraseña si está definida y no está vacía
-    if (REDIS_PASSWORD && REDIS_PASSWORD.trim() !== '') {
-      redisConfig.password = REDIS_PASSWORD
-      console.log('Redis configurado con contraseña')
-    } else {
-      console.log('Redis configurado sin contraseña (modo desarrollo)')
-    }
-
-    console.log('Configuración final de Redis:', JSON.stringify(redisConfig, null, 2))
-
-    this.client = createClient(redisConfig)
-
-    this.client.on('error', (err) => {
-      console.error('Redis Client Error:', err)
-      // No lanzar error para evitar que se detenga la aplicación
-    })
+    });
+    
+    this.client.on('error', (err) => console.error('Redis error:', err));
 
     this.client.on('connect', () => {
       console.log('Redis Client Connected')

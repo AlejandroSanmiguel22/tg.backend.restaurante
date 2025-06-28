@@ -38,7 +38,7 @@ export class MetricsService {
     try {
       const cached = await this.redis.get(cacheKey)
       if (cached) {
-        console.log(`✅ Cache HIT para: ${cacheKey}`)
+        console.log(`Cache HIT para: ${cacheKey}`)
         const parsed = JSON.parse(cached)
         return {
           ...parsed,
