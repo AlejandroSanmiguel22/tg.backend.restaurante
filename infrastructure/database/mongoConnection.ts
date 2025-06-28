@@ -8,9 +8,9 @@ export const connectDB = async (): Promise<void> => {
     if (!mongoURI) {
       throw new Error('Falta la variable MONGO_URI en el .env')
     }
-    
+
     await mongoose.connect(mongoURI)
-    console.log('Conectado a MongoDB Atlas')
+  console.log('Conectado a MongoDB Atlas')
     
     // Migrar contraseñas de meseros existentes
     await migrateWaiterPasswords()

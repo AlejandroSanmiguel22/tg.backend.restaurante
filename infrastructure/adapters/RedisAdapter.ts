@@ -3,37 +3,86 @@ import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB } from '../../applicat
 
 export class RedisAdapter {
   private client: RedisClientType
-  private static instance: RedisAdapter
+  private static instance: RedisAdapter | null = null
+  private static isInitializing = false
 
   private constructor() {
-    this.client = createClient({
+    console.log('🔧 Creando nueva instancia de RedisAdapter...')
+    console.log(`📍 Configuración Redis - Host: ${REDIS_HOST}, Port: ${REDIS_PORT}, DB: ${REDIS_DB}`)
+    
+    // Configuración básica de Redis
+    const redisConfig: any = {
       socket: {
         host: REDIS_HOST,
         port: REDIS_PORT
       },
-      password: REDIS_PASSWORD,
       database: REDIS_DB
-    })
+    }
+
+    // Solo agregar contraseña si está definida y no está vacía
+    if (REDIS_PASSWORD && REDIS_PASSWORD.trim() !== '') {
+      redisConfig.password = REDIS_PASSWORD
+      console.log('🔐 Redis configurado con contraseña')
+    } else {
+      console.log('🔓 Redis configurado sin contraseña (modo desarrollo)')
+    }
+
+    console.log('📋 Configuración final de Redis:', JSON.stringify(redisConfig, null, 2))
+
+    this.client = createClient(redisConfig)
 
     this.client.on('error', (err) => {
       console.error('Redis Client Error:', err)
+      // No lanzar error para evitar que se detenga la aplicación
     })
 
     this.client.on('connect', () => {
       console.log('Redis Client Connected')
     })
+
+    this.client.on('ready', () => {
+      console.log('Redis Client Ready')
+    })
+
+    this.client.on('end', () => {
+      console.log('Redis Client Disconnected')
+    })
   }
 
   public static getInstance(): RedisAdapter {
-    if (!RedisAdapter.instance) {
-      RedisAdapter.instance = new RedisAdapter()
+    if (RedisAdapter.isInitializing) {
+      console.log('⚠️ RedisAdapter ya se está inicializando...')
+      while (RedisAdapter.isInitializing) {
+        // Esperar a que termine la inicialización
+      }
+      return RedisAdapter.instance!
     }
+
+    if (!RedisAdapter.instance) {
+      console.log('🆕 Creando primera instancia de RedisAdapter...')
+      RedisAdapter.isInitializing = true
+      RedisAdapter.instance = new RedisAdapter()
+      RedisAdapter.isInitializing = false
+      console.log('✅ Instancia de RedisAdapter creada exitosamente')
+    } else {
+      console.log('♻️ Reutilizando instancia existente de RedisAdapter')
+    }
+    
     return RedisAdapter.instance
   }
 
   async connect(): Promise<void> {
     if (!this.client.isOpen) {
-      await this.client.connect()
+      console.log('🔌 Conectando a Redis...')
+      try {
+        await this.client.connect()
+        console.log('✅ Conexión a Redis establecida exitosamente')
+      } catch (error) {
+        console.error('❌ Error conectando a Redis:', error)
+        throw error
+      }
+    } else {
+      console.log('🔗 Redis ya está conectado')
     }
   }
 
