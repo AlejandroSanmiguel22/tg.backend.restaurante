@@ -10,16 +10,32 @@ export class RedisAdapter {
     console.log('Creando nueva instancia de RedisAdapter...')
     console.log(`Configuración Redis - Host: ${REDIS_HOST}, Port: ${REDIS_PORT}, DB: ${REDIS_DB}`)
 
-    this.client = createClient({
-      url: `redis://default:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}`,
-      database: REDIS_DB,
-      socket: {
-        host: REDIS_HOST,
-        port: REDIS_PORT,
-        tls: true,
-        reconnectStrategy: () => 1000,
-      },
-    })
+    // Configuración condicional para desarrollo vs producción
+    const isDevelopment = process.env.NODE_ENV !== 'production'
+    
+    if (isDevelopment) {
+      // Configuración para desarrollo local (sin TLS, sin contraseña)
+      this.client = createClient({
+        socket: {
+          host: REDIS_HOST,
+          port: REDIS_PORT,
+          reconnectStrategy: () => 1000,
+        },
+        database: REDIS_DB,
+      })
+    } else {
+      // Configuración para producción (con TLS y contraseña)
+      this.client = createClient({
+        url: `redis://default:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}`,
+        database: REDIS_DB,
+        socket: {
+          host: REDIS_HOST,
+          port: REDIS_PORT,
+          tls: true,
+          reconnectStrategy: () => 1000,
+        },
+      })
+    }
 
     this.client.on('error', (err) => {
       console.error('Redis error:', err)
@@ -39,8 +55,8 @@ export class RedisAdapter {
 
     // Conexión automática al crear la instancia
     this.client.connect()
-      .then(() => console.log('✅ Redis conectado correctamente desde constructor'))
-      .catch((err) => console.error('❌ Error conectando a Redis:', err))
+      .then(() => console.log('Redis conectado correctamente desde constructor'))
+      .catch((err) => console.error('Error conectando a Redis:', err))
   }
 
   public static getInstance(): RedisAdapter {
