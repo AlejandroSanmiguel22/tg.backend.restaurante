@@ -9,6 +9,7 @@ import {
   RealTimeMetricsDTO,
   SalesMetricsDTO,
   WaiterPerformanceDTO,
+  AllWaitersPerformanceDTO,
   ProductMetricsDTO,
   PeakHoursMetricsDTO,
   FinancialMetricsDTO,
@@ -240,6 +241,75 @@ export class MetricsService {
     )
   }
 
+  // Rendimiento de Todos los Meseros
+  async getAllWaitersPerformance(startDate: Date, endDate: Date): Promise<AllWaitersPerformanceDTO> {
+    const cacheKey = `metrics:allwaiters:${startDate.toISOString().split('T')[0]}:${endDate.toISOString().split('T')[0]}`
+    
+    return this.getFromCacheOrCalculate(
+      cacheKey,
+      300, // 5 minutos
+      async () => {
+        const waiters = await this.waiterRepository.findAll()
+        const allOrders = await this.orderRepository.findByDateRange(startDate, endDate)
+        
+        // Calcular métricas para cada mesero
+        const waitersPerformance = await Promise.all(
+          waiters.map(async (waiter) => {
+            const waiterOrders = allOrders.filter(order => order.waiterId === waiter.id)
+            
+            const totalSales = waiterOrders.reduce((sum, order) => sum + order.total, 0)
+            const averageOrderValue = waiterOrders.length > 0 ? totalSales / waiterOrders.length : 0
+            
+            // Agrupar por día para este mesero
+            const ordersByDay = new Map<string, { orders: number; sales: number }>()
+            waiterOrders.forEach(order => {
+              const date = order.createdAt.toISOString().split('T')[0]
+              const existing = ordersByDay.get(date) || { orders: 0, sales: 0 }
+              existing.orders += 1
+              existing.sales += order.total
+              ordersByDay.set(date, existing)
+            })
+            
+            return {
+              waiterId: waiter.id,
+              waiterName: `${waiter.firstName} ${waiter.lastName}`,
+              totalOrders: waiterOrders.length,
+              totalSales,
+              averageOrderValue,
+              percentageOfTotalSales: 0, // Se calculará después
+              ordersByDay: Array.from(ordersByDay.entries()).map(([date, data]) => ({
+                date,
+                orders: data.orders,
+                sales: data.sales
+              }))
+            }
+          })
+        )
+        
+        // Calcular totales generales
+        const totalSales = waitersPerformance.reduce((sum, waiter) => sum + waiter.totalSales, 0)
+        const totalOrders = waitersPerformance.reduce((sum, waiter) => sum + waiter.totalOrders, 0)
+        const averageOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0
+        
+        // Calcular porcentajes de ventas totales para cada mesero
+        const waitersWithPercentages = waitersPerformance.map(waiter => ({
+          ...waiter,
+          percentageOfTotalSales: totalSales > 0 ? (waiter.totalSales / totalSales) * 100 : 0
+        }))
+        
+        return {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          totalWaiters: waiters.length,
+          totalSales,
+          totalOrders,
+          averageOrderValue,
+          waiters: waitersWithPercentages
+        }
+      }
+    )
+  }
+
   // Productos más vendidos
   async getProductMetrics(period: 'week' | 'month', startDate: Date, endDate: Date): Promise<ProductMetricsDTO> {
     const cacheKey = `metrics:products:${period}:${startDate.toISOString().split('T')[0]}:${endDate.toISOString().split('T')[0]}`
@@ -430,6 +500,7 @@ export class MetricsService {
     console.log(`Invalidando cache de métricas de meseros`)
     // Invalidar todas las métricas de meseros
     await this.redis.del('metrics:waiter:*')
+    await this.redis.del('metrics:allwaiters:*')
   }
 
   async invalidateProductMetrics(): Promise<void> {
@@ -457,6 +528,7 @@ export class MetricsService {
     await this.redis.del('metrics:realtime')
     await this.redis.del('metrics:sales:*')
     await this.redis.del('metrics:waiter:*')
+    await this.redis.del('metrics:allwaiters:*')
     await this.redis.del('metrics:products:*')
     await this.redis.del('metrics:peakhours:*')
     await this.redis.del('metrics:financial:*')
