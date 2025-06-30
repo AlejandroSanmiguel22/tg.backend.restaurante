@@ -49,6 +49,9 @@ router.get('/sales', metricsController.getSalesMetrics.bind(metricsController))
 // Rendimiento por Mesero
 router.get('/waiters', metricsController.getWaiterPerformance.bind(metricsController))
 
+// Rendimiento de Todos los Meseros
+router.get('/all-waiters', metricsController.getAllWaitersPerformance.bind(metricsController))
+
 // Productos más vendidos
 router.get('/products', metricsController.getProductMetrics.bind(metricsController))
 

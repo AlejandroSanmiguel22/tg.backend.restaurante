@@ -59,6 +59,28 @@ export interface WaiterPerformanceDTO extends BaseMetricsDTO {
   }>
 }
 
+export interface AllWaitersPerformanceDTO extends BaseMetricsDTO {
+  startDate: string
+  endDate: string
+  totalWaiters: number
+  totalSales: number
+  totalOrders: number
+  averageOrderValue: number
+  waiters: Array<{
+    waiterId: string
+    waiterName: string
+    totalOrders: number
+    totalSales: number
+    averageOrderValue: number
+    percentageOfTotalSales: number
+    ordersByDay?: Array<{
+      date: string
+      orders: number
+      sales: number
+    }>
+  }>
+}
+
 export interface ProductMetricsDTO extends BaseMetricsDTO {
   period: 'week' | 'month'
   startDate: string
