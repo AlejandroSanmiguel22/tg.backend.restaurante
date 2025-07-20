@@ -70,6 +70,12 @@ router.get('/report/waiter', metricsController.getWaiterReport.bind(metricsContr
 // Reporte de Productos
 router.get('/report/products', metricsController.getProductReport.bind(metricsController))
 
+// Producto más vendido
+router.get('/most-sold-product', metricsController.getMostSoldProduct.bind(metricsController))
+
+// Producto menos vendido
+router.get('/least-sold-product', metricsController.getLeastSoldProduct.bind(metricsController))
+
 // Invalidar cache de métricas (solo para admins)
 router.get('/invalidate', requireAuth(['admin']), metricsController.invalidateCache.bind(metricsController))
 
