@@ -704,4 +704,54 @@ export class MetricsService {
       }
     )
   }
+
+  /**
+   * Retorna el producto más vendido en el rango de fechas (con cache)
+   */
+  async getMostSoldProduct(startDate: Date, endDate: Date): Promise<{ name: string; imageUrl: string } | null> {
+    const cacheKey = `metrics:mostsold:${startDate.toISOString().split('T')[0]}:${endDate.toISOString().split('T')[0]}`
+    return this.getFromCacheOrCalculate(
+      cacheKey,
+      300, // 5 minutos
+      async () => {
+        const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        const productCounts = new Map<string, number>()
+        orders.forEach(order => {
+          order.items.forEach(item => {
+            productCounts.set(item.productId, (productCounts.get(item.productId) || 0) + item.quantity)
+          })
+        })
+        if (productCounts.size === 0) return null
+        const mostSoldId = Array.from(productCounts.entries()).sort((a, b) => b[1] - a[1])[0][0]
+        const product = await this.productRepository.findById(mostSoldId)
+        if (!product) return null
+        return { name: product.name, imageUrl: product.imageUrl }
+      }
+    )
+  }
+
+  /**
+   * Retorna el producto menos vendido en el rango de fechas (con cache)
+   */
+  async getLeastSoldProduct(startDate: Date, endDate: Date): Promise<{ name: string; imageUrl: string } | null> {
+    const cacheKey = `metrics:leastsold:${startDate.toISOString().split('T')[0]}:${endDate.toISOString().split('T')[0]}`
+    return this.getFromCacheOrCalculate(
+      cacheKey,
+      300, // 5 minutos
+      async () => {
+        const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        const productCounts = new Map<string, number>()
+        orders.forEach(order => {
+          order.items.forEach(item => {
+            productCounts.set(item.productId, (productCounts.get(item.productId) || 0) + item.quantity)
+          })
+        })
+        if (productCounts.size === 0) return null
+        const leastSoldId = Array.from(productCounts.entries()).sort((a, b) => a[1] - b[1])[0][0]
+        const product = await this.productRepository.findById(leastSoldId)
+        if (!product) return null
+        return { name: product.name, imageUrl: product.imageUrl }
+      }
+    )
+  }
 } 
