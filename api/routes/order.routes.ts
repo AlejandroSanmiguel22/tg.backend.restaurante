@@ -54,7 +54,7 @@ router.delete('/:id/items/:itemId', requireAuth(['admin', 'mesero']), orderContr
 router.put('/:id/items/:itemId', requireAuth(['admin', 'mesero']), orderController.updateItem.bind(orderController))
 
 // Cerrar orden (facturar) (admin y meseros)
-router.get('/:id/close', requireAuth(['admin', 'mesero']), orderController.closeOrder.bind(orderController))
+router.post('/:id/close', requireAuth(['admin', 'mesero']), orderController.closeOrder.bind(orderController))
 
 // Generar factura (admin y meseros)
 router.post('/:id/bill', requireAuth(['admin', 'mesero']), orderController.generateBill.bind(orderController))

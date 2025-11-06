@@ -172,7 +172,7 @@ export class OrderRepositoryMongo implements OrderRepository {
     }
 
     const subtotal = order.items.reduce((sum, item) => sum + item.totalPrice, 0)
-    const tip = (subtotal * 3) / 100 // Tip constante del 3%
+    const tip = (subtotal * 10) / 100 // Tip constante del 10%
     const total = subtotal + tip
 
     return { subtotal, total }
