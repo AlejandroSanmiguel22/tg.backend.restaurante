@@ -267,8 +267,16 @@ export class OrderController {
   async closeOrder(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params
+      const closeOrderDTO: CloseOrderDTO = req.body
       
-      const closedOrder = await this.orderUseCase.closeOrder(id)
+      if (!closeOrderDTO.withTip || !['yes', 'no'].includes(closeOrderDTO.withTip)) {
+        res.status(400).json({
+          message: 'El campo withTip es requerido y debe ser "yes" o "no"'
+        })
+        return
+      }
+      
+      const closedOrder = await this.orderUseCase.closeOrder(id, closeOrderDTO)
       
       if (!closedOrder) {
         res.status(404).json({

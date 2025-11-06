@@ -21,6 +21,7 @@ export interface OrderItem {
   unitPrice: number
   totalPrice: number
   notes?: string
+  productImage?: string | null
 }
 
 export type OrderStatus = 'en_cocina' | 'entregado' | 'facturada'

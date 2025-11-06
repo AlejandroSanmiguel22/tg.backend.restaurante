@@ -27,8 +27,7 @@ export interface UpdateOrderItemDTO {
 }
 
 export interface CloseOrderDTO {
-  withTip: boolean
-  tipPercentage?: number
+  withTip: 'yes' | 'no'
 }
 
 export interface GenerateBillDTO {
@@ -60,6 +59,7 @@ export interface OrderItemResponseDTO {
   unitPrice: number
   totalPrice: number
   notes: string
+  productImage?: string | null
 }
 
 export interface BillResponseDTO {

@@ -14,7 +14,7 @@ import { Order, OrderStatus, OrderItem } from '../entities/Order'
 import { TableStatus } from '../entities/Table'
 
 export class OrderUseCase {
-  private readonly TIP_PERCENTAGE = 3 // Tip constante del 3%
+  private readonly TIP_PERCENTAGE = 10 // Tip constante del 10%
 
   constructor(
     private readonly orderRepository: OrderRepository,
@@ -105,7 +105,24 @@ export class OrderUseCase {
   }
 
   async findActiveByTableId(tableId: string): Promise<Order | null> {
-    return await this.orderRepository.findActiveByTableId(tableId)
+    const order = await this.orderRepository.findActiveByTableId(tableId)
+    if (!order) return null
+
+    // Enriquecer los items con información del producto (incluye imagen)
+    const enrichedItems = await Promise.all(
+      order.items.map(async (item) => {
+        const product = await this.productRepository.findById(item.productId)
+        return {
+          ...item,
+          productImage: product?.imageUrl || null
+        }
+      })
+    )
+
+    return {
+      ...order,
+      items: enrichedItems
+    }
   }
 
   async findByWaiterId(waiterId: string): Promise<Order[]> {
@@ -240,7 +257,7 @@ export class OrderUseCase {
     return updatedOrder
   }
 
-  async closeOrder(id: string): Promise<Order | null> {
+  async closeOrder(id: string, closeOrderDTO: CloseOrderDTO): Promise<Order | null> {
     const existingOrder = await this.orderRepository.findById(id)
     if (!existingOrder) {
       throw new Error('Orden no encontrada')
@@ -250,9 +267,14 @@ export class OrderUseCase {
       throw new Error('La orden ya está facturada')
     }
 
-    // Recalcular tip y total con el porcentaje constante del 3%
-    const tip = (existingOrder.subtotal * this.TIP_PERCENTAGE) / 100
-    const total = existingOrder.subtotal + tip
+    // Calcular tip y total según withTip
+    let tip = 0
+    let total = existingOrder.subtotal
+
+    if (closeOrderDTO.withTip === 'yes') {
+      tip = (existingOrder.subtotal * this.TIP_PERCENTAGE) / 100
+      total = existingOrder.subtotal + tip
+    }
 
     // Actualizar propina y total
     await this.orderRepository.update(id, { tip, total })
