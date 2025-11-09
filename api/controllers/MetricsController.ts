@@ -360,10 +360,16 @@ export class MetricsController {
       }
       const result = await this.metricsService.getMostSoldProduct(start, end)
       if (!result) {
-        res.status(404).json({ error: 'No hay productos vendidos en el rango de fechas' })
+        res.status(404).json({ 
+          error: 'No hay productos vendidos en el rango de fechas',
+          message: 'No se encontraron datos de productos más vendidos para el período especificado'
+        })
         return
       }
-      res.json(result)
+      res.json({
+        mostSoldProduct: result,
+        calculatedAt: new Date().toISOString()
+      })
     } catch (error) {
       console.error('Error obteniendo el producto más vendido:', error)
       res.status(500).json({ error: 'Error interno del servidor' })
@@ -388,10 +394,16 @@ export class MetricsController {
       }
       const result = await this.metricsService.getLeastSoldProduct(start, end)
       if (!result) {
-        res.status(404).json({ error: 'No hay productos vendidos en el rango de fechas' })
+        res.status(404).json({ 
+          error: 'No hay productos vendidos en el rango de fechas',
+          message: 'No se encontraron datos de productos menos vendidos para el período especificado'
+        })
         return
       }
-      res.json(result)
+      res.json({
+        leastSoldProduct: result,
+        calculatedAt: new Date().toISOString()
+      })
     } catch (error) {
       console.error('Error obteniendo el producto menos vendido:', error)
       res.status(500).json({ error: 'Error interno del servidor' })

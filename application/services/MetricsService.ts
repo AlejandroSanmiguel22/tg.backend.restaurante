@@ -507,6 +507,8 @@ export class MetricsService {
     console.log(`Invalidando cache de métricas de productos`)
     // Invalidar todas las métricas de productos
     await this.redis.del('metrics:products:*')
+    await this.redis.del('metrics:mostsold:*')
+    await this.redis.del('metrics:leastsold:*')
   }
 
   async invalidatePeakHoursMetrics(): Promise<void> {
@@ -530,6 +532,8 @@ export class MetricsService {
     await this.redis.del('metrics:waiter:*')
     await this.redis.del('metrics:allwaiters:*')
     await this.redis.del('metrics:products:*')
+    await this.redis.del('metrics:mostsold:*')
+    await this.redis.del('metrics:leastsold:*')
     await this.redis.del('metrics:peakhours:*')
     await this.redis.del('metrics:financial:*')
     await this.redis.del('metrics:report:*')
@@ -708,50 +712,114 @@ export class MetricsService {
   /**
    * Retorna el producto más vendido en el rango de fechas (con cache)
    */
-  async getMostSoldProduct(startDate: Date, endDate: Date): Promise<{ name: string; imageUrl: string } | null> {
+  async getMostSoldProduct(startDate: Date, endDate: Date): Promise<{ name: string; imageUrl: string; totalSold: number } | null> {
     const cacheKey = `metrics:mostsold:${startDate.toISOString().split('T')[0]}:${endDate.toISOString().split('T')[0]}`
-    return this.getFromCacheOrCalculate(
+    const result = await this.getFromCacheOrCalculate(
       cacheKey,
       300, // 5 minutos
       async () => {
+        console.log(`Calculando producto más vendido para rango: ${startDate.toISOString().split('T')[0]} - ${endDate.toISOString().split('T')[0]}`)
         const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        console.log(`Órdenes encontradas: ${orders.length}`)
+        
         const productCounts = new Map<string, number>()
         orders.forEach(order => {
           order.items.forEach(item => {
             productCounts.set(item.productId, (productCounts.get(item.productId) || 0) + item.quantity)
           })
         })
-        if (productCounts.size === 0) return null
-        const mostSoldId = Array.from(productCounts.entries()).sort((a, b) => b[1] - a[1])[0][0]
-        const product = await this.productRepository.findById(mostSoldId)
-        if (!product) return null
-        return { name: product.name, imageUrl: product.imageUrl }
+        
+        console.log(`Productos únicos encontrados: ${productCounts.size}`)
+        if (productCounts.size === 0) {
+          console.log('No hay productos vendidos en el rango de fechas')
+          return { product: null }
+        }
+        
+        // Ordenar productos por cantidad vendida (descendente)
+        const sortedProducts = Array.from(productCounts.entries()).sort((a, b) => b[1] - a[1])
+        
+        // Buscar el primer producto que existe en la base de datos
+        for (const [productId, totalSold] of sortedProducts) {
+          console.log(`Verificando producto ID: ${productId}, cantidad: ${totalSold}`)
+          const product = await this.productRepository.findById(productId)
+          
+          if (product) {
+            console.log(`Producto encontrado: ${product.name}`)
+            return { 
+              product: { 
+                name: product.name, 
+                imageUrl: product.imageUrl, 
+                totalSold 
+              } 
+            }
+          } else {
+            console.log(`Producto con ID ${productId} no encontrado en la base de datos`)
+          }
+        }
+        
+        console.log('Ninguno de los productos vendidos existe en la base de datos')
+        return { product: null }
       }
     )
+    
+    // Extraer solo el producto del resultado del cache
+    return (result as any).product || null
   }
 
   /**
    * Retorna el producto menos vendido en el rango de fechas (con cache)
    */
-  async getLeastSoldProduct(startDate: Date, endDate: Date): Promise<{ name: string; imageUrl: string } | null> {
+  async getLeastSoldProduct(startDate: Date, endDate: Date): Promise<{ name: string; imageUrl: string; totalSold: number } | null> {
     const cacheKey = `metrics:leastsold:${startDate.toISOString().split('T')[0]}:${endDate.toISOString().split('T')[0]}`
-    return this.getFromCacheOrCalculate(
+    const result = await this.getFromCacheOrCalculate(
       cacheKey,
       300, // 5 minutos
       async () => {
+        console.log(`Calculando producto menos vendido para rango: ${startDate.toISOString().split('T')[0]} - ${endDate.toISOString().split('T')[0]}`)
         const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        console.log(`Órdenes encontradas: ${orders.length}`)
+        
         const productCounts = new Map<string, number>()
         orders.forEach(order => {
           order.items.forEach(item => {
             productCounts.set(item.productId, (productCounts.get(item.productId) || 0) + item.quantity)
           })
         })
-        if (productCounts.size === 0) return null
-        const leastSoldId = Array.from(productCounts.entries()).sort((a, b) => a[1] - b[1])[0][0]
-        const product = await this.productRepository.findById(leastSoldId)
-        if (!product) return null
-        return { name: product.name, imageUrl: product.imageUrl }
+        
+        console.log(`Productos únicos encontrados: ${productCounts.size}`)
+        if (productCounts.size === 0) {
+          console.log('No hay productos vendidos en el rango de fechas')
+          return { product: null }
+        }
+        
+        // Ordenar productos por cantidad vendida (ascendente)
+        const sortedProducts = Array.from(productCounts.entries()).sort((a, b) => a[1] - b[1])
+        
+        // Buscar el primer producto que existe en la base de datos
+        for (const [productId, totalSold] of sortedProducts) {
+          console.log(`Verificando producto ID: ${productId}, cantidad: ${totalSold}`)
+          const product = await this.productRepository.findById(productId)
+          
+          if (product) {
+            console.log(`Producto encontrado: ${product.name}`)
+            return { 
+              product: { 
+                name: product.name, 
+                imageUrl: product.imageUrl, 
+                totalSold 
+              } 
+            }
+          } else {
+            console.log(`Producto con ID ${productId} no encontrado en la base de datos`)
+          }
+        }
+        
+        console.log('Ninguno de los productos vendidos existe en la base de datos')
+        return { product: null }
       }
     )
+    
+    // Extraer solo el producto del resultado del cache
+    return (result as any).product || null
   }
 } 
