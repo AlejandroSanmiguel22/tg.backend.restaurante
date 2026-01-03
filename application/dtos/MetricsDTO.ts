@@ -187,4 +187,20 @@ export interface ProductReportDTO extends BaseMetricsDTO {
       averagePrice: number
     }>
   }>
+}
+
+// Flujo de atención por franja horaria (7am - 7pm)
+export interface HourlyFlowMetricsDTO extends BaseMetricsDTO {
+  date: string
+  startHour: number
+  endHour: number
+  hourlyFlow: Array<{
+    hour: number
+    hourLabel: string
+    ordersCount: number
+    customersServed: number
+  }>
+  totalOrdersInRange: number
+  peakHour: number
+  peakHourLabel: string
 } 
