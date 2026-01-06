@@ -76,6 +76,9 @@ router.get('/most-sold-product', metricsController.getMostSoldProduct.bind(metri
 // Producto menos vendido
 router.get('/least-sold-product', metricsController.getLeastSoldProduct.bind(metricsController))
 
+// Flujo de atención por franja horaria (7am - 7pm)
+router.get('/hourly-flow', metricsController.getHourlyFlowMetrics.bind(metricsController))
+
 // Invalidar cache de métricas (solo para admins)
 router.get('/invalidate', requireAuth(['admin']), metricsController.invalidateCache.bind(metricsController))
 
