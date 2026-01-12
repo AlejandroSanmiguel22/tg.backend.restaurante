@@ -1,6 +1,7 @@
 import { Order, OrderStatus, OrderItem } from '../../domain/entities/Order'
 import { OrderRepository } from '../../domain/repositories/OrderRepository'
 import { OrderModel } from '../database/models/OrderModel'
+import { productModel } from '../database/models/ProductModel'
 
 export class OrderRepositoryMongo implements OrderRepository {
   async create(order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<Order> {
@@ -11,12 +12,22 @@ export class OrderRepositoryMongo implements OrderRepository {
 
   async findById(id: string): Promise<Order | null> {
     const order = await OrderModel.findById(id)
-    return order ? this.mapToEntity(order) : null
+    if (!order) return null
+    
+    const mappedOrder = this.mapToEntity(order)
+    return await this.populateProductImages(mappedOrder)
   }
 
   async findByTableId(tableId: string): Promise<Order[]> {
     const orders = await OrderModel.find({ tableId }).sort({ createdAt: -1 })
-    return orders.map(this.mapToEntity)
+    const mappedOrders = orders.map(order => this.mapToEntity(order))
+    
+    // Poblar imágenes para cada orden
+    const ordersWithImages = await Promise.all(
+      mappedOrders.map(order => this.populateProductImages(order))
+    )
+    
+    return ordersWithImages
   }
 
   async findActiveByTableId(tableId: string): Promise<Order | null> {
@@ -24,7 +35,10 @@ export class OrderRepositoryMongo implements OrderRepository {
       tableId, 
       status: { $in: ['en_cocina', 'entregado'] } 
     })
-    return order ? this.mapToEntity(order) : null
+    if (!order) return null
+    
+    const mappedOrder = this.mapToEntity(order)
+    return await this.populateProductImages(mappedOrder)
   }
 
   async findByWaiterId(waiterId: string): Promise<Order[]> {
@@ -41,7 +55,15 @@ export class OrderRepositoryMongo implements OrderRepository {
     const orders = await OrderModel.find({ 
       status: { $in: ['en_cocina', 'entregado'] } 
     }).sort({ createdAt: -1 })
-    return orders.map(this.mapToEntity)
+    
+    const mappedOrders = orders.map(order => this.mapToEntity(order))
+    
+    // Poblar imágenes para cada orden
+    const ordersWithImages = await Promise.all(
+      mappedOrders.map(order => this.populateProductImages(order))
+    )
+    
+    return ordersWithImages
   }
 
   async findByDateRange(startDate: Date, endDate: Date): Promise<Order[]> {
@@ -92,7 +114,10 @@ export class OrderRepositoryMongo implements OrderRepository {
       },
       { new: true }
     )
-    return updatedOrder ? this.mapToEntity(updatedOrder) : null
+    if (!updatedOrder) return null
+    
+    const mappedOrder = this.mapToEntity(updatedOrder)
+    return await this.populateProductImages(mappedOrder)
   }
 
   async removeItem(id: string, itemId: string): Promise<Order | null> {
@@ -104,7 +129,10 @@ export class OrderRepositoryMongo implements OrderRepository {
       },
       { new: true }
     )
-    return updatedOrder ? this.mapToEntity(updatedOrder) : null
+    if (!updatedOrder) return null
+    
+    const mappedOrder = this.mapToEntity(updatedOrder)
+    return await this.populateProductImages(mappedOrder)
   }
 
   async updateItem(orderId: string, itemId: string, updates: Partial<OrderItem>): Promise<Order | null> {
@@ -140,7 +168,10 @@ export class OrderRepositoryMongo implements OrderRepository {
         { new: true }
       )
 
-      return updatedOrder ? this.mapToEntity(updatedOrder) : null
+      if (!updatedOrder) return null
+      
+      const mappedOrder = this.mapToEntity(updatedOrder)
+      return await this.populateProductImages(mappedOrder)
     } catch (error) {
       console.error('Error updating order item:', error)
       return null
@@ -195,7 +226,8 @@ export class OrderRepositoryMongo implements OrderRepository {
         quantity: item.quantity || 0,
         unitPrice: item.unitPrice || 0,
         totalPrice: item.totalPrice || 0,
-        notes: item.notes || ''
+        notes: item.notes || '',
+        productImage: item.productImage || null
       })),
       subtotal: order.subtotal || 0,
       tip: order.tip || 0,
@@ -204,6 +236,39 @@ export class OrderRepositoryMongo implements OrderRepository {
       createdAt: order.createdAt || new Date(),
       updatedAt: order.updatedAt || new Date(),
       closedAt: order.closedAt || undefined
+    }
+  }
+
+  private async populateProductImages(order: Order): Promise<Order> {
+    // Buscar todos los productIds únicos que no tienen imagen
+    const productIdsWithoutImage = order.items
+      .filter(item => !item.productImage)
+      .map(item => item.productId)
+    
+    if (productIdsWithoutImage.length === 0) {
+      return order // Todos los items ya tienen imagen
+    }
+
+    // Buscar los productos en la base de datos
+    const products = await productModel.find({
+      _id: { $in: productIdsWithoutImage }
+    }).select('_id imageUrl')
+
+    // Crear un mapa de productId -> imageUrl
+    const productImageMap = new Map<string, string>()
+    products.forEach(product => {
+      productImageMap.set(product._id.toString(), product.imageUrl)
+    })
+
+    // Actualizar los items con las imágenes
+    const updatedItems = order.items.map(item => ({
+      ...item,
+      productImage: item.productImage || productImageMap.get(item.productId) || null
+    }))
+
+    return {
+      ...order,
+      items: updatedItems
     }
   }
 } 

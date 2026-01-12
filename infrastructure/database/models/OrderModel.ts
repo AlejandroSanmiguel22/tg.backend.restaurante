@@ -28,6 +28,10 @@ const OrderItemSchema = new Schema({
   notes: {
     type: String,
     default: ''
+  },
+  productImage: {
+    type: String,
+    default: null
   }
 }, {
   _id: true,
