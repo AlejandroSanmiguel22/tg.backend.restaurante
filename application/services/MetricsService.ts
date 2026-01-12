@@ -822,4 +822,83 @@ export class MetricsService {
     // Extraer solo el producto del resultado del cache
     return (result as any).product || null
   }
-} 
+
+  // Flujo de atención por franja horaria (7am - 7pm)
+  async getHourlyFlowMetrics(
+    startDate: Date,
+    endDate: Date
+  ): Promise<import("../dtos/MetricsDTO").HourlyFlowMetricsDTO> {
+    const cacheKey = `metrics:hourlyflow:${
+      startDate.toISOString().split("T")[0]
+    }:${endDate.toISOString().split("T")[0]}`;
+
+    return this.getFromCacheOrCalculate(
+      cacheKey,
+      300, // 5 minutos
+      async () => {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        const orders = await this.orderRepository.findByDateRange(start, end);
+
+        const START_HOUR = 7; // 7:00
+        const END_HOUR = 19; // 19:00
+
+        // Inicializar estructura para horas de 7:00 a 19:00 (formato 24h)
+        const hourlyFlow: Array<{
+          hour: number;
+          hourLabel: string;
+          ordersCount: number;
+          customersServed: number;
+        }> = [];
+
+        for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
+          const hourLabel = `${hour.toString().padStart(2, "0")}:00`;
+
+          hourlyFlow.push({
+            hour,
+            hourLabel,
+            ordersCount: 0,
+            customersServed: 0,
+          });
+        }
+
+        // Contar órdenes por hora dentro del rango (acumulado de todos los días)
+        orders.forEach((order) => {
+          const orderHour = order.createdAt.getHours();
+          if (orderHour >= START_HOUR && orderHour <= END_HOUR) {
+            const index = orderHour - START_HOUR;
+            hourlyFlow[index].ordersCount += 1;
+            // Estimamos clientes atendidos basado en items de la orden
+            hourlyFlow[index].customersServed += order.items.length > 3 ? 2 : 1;
+          }
+        });
+
+        // Calcular total y hora pico
+        const totalOrdersInRange = hourlyFlow.reduce(
+          (sum, h) => sum + h.ordersCount,
+          0
+        );
+        const peakHourData = hourlyFlow.reduce(
+          (max, current) =>
+            current.ordersCount > max.ordersCount ? current : max,
+          hourlyFlow[0]
+        );
+
+        return {
+          date: `${startDate.toISOString().split("T")[0]} - ${
+            endDate.toISOString().split("T")[0]
+          }`,
+          startHour: START_HOUR,
+          endHour: END_HOUR,
+          hourlyFlow,
+          totalOrdersInRange,
+          peakHour: peakHourData.hour,
+          peakHourLabel: peakHourData.hourLabel,
+        };
+      }
+    );
+  }
+}

@@ -410,6 +410,40 @@ export class MetricsController {
     }
   }
 
+  // Flujo de atención por franja horaria (7am - 7pm)
+  // Flujo de atención por franja horaria (7am - 7pm)
+  async getHourlyFlowMetrics(req: Request, res: Response): Promise<void> {
+    try {
+      const { startDate, endDate } = req.query;
+
+      if (!startDate || !endDate) {
+        res.status(400).json({
+          error: "Se requieren los parámetros: startDate, endDate",
+        });
+        return;
+      }
+
+      const start = new Date(startDate as string);
+      const end = new Date(endDate as string);
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        res.status(400).json({
+          error: "Las fechas deben tener formato válido (YYYY-MM-DD)",
+        });
+        return;
+      }
+
+      const metrics = await this.metricsService.getHourlyFlowMetrics(
+        start,
+        end
+      );
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error obteniendo métricas de flujo por hora:", error);
+      res.status(500).json({ error: "Error interno del servidor" });
+    }
+  }
+
   // Invalidar Cache
   async invalidateCache(req: Request, res: Response): Promise<void> {
     try {
