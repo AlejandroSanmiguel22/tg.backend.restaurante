@@ -68,7 +68,8 @@ export class OrderUseCase {
         quantity: itemDTO.quantity,
         unitPrice: product.price,
         totalPrice,
-        notes: itemDTO.notes || ''
+        notes: itemDTO.notes || '',
+        productImage: product.imageUrl || null
       })
     }
 
@@ -178,7 +179,8 @@ export class OrderUseCase {
         quantity: itemDTO.quantity,
         unitPrice: product.price,
         totalPrice,
-        notes: itemDTO.notes || ''
+        notes: itemDTO.notes || '',
+        productImage: product.imageUrl || null
       }
 
       await this.orderRepository.addItem(id, newItem)
@@ -187,13 +189,19 @@ export class OrderUseCase {
     // Obtener la orden actualizada y recalcular totales
     const updatedOrder = await this.orderRepository.findById(id)
     if (updatedOrder) {
-      const { subtotal, total } = await this.orderRepository.calculateTotals(id)
-      const tip = (subtotal * this.TIP_PERCENTAGE) / 100
+      // Recalcular subtotal sumando todos los items
+      const newSubtotal = updatedOrder.items.reduce((sum, item) => sum + item.totalPrice, 0)
+      const newTip = (newSubtotal * this.TIP_PERCENTAGE) / 100
+      const newTotal = newSubtotal + newTip
+      
       await this.orderRepository.update(id, { 
-        subtotal, 
-        tip,
-        total
+        subtotal: newSubtotal, 
+        tip: newTip,
+        total: newTotal
       })
+      
+      // Retornar la orden actualizada con los nuevos totales
+      return await this.orderRepository.findById(id)
     }
 
     return updatedOrder
@@ -213,12 +221,15 @@ export class OrderUseCase {
     
     // Recalcular totales después de eliminar
     if (updatedOrder) {
-      const { subtotal, total } = await this.orderRepository.calculateTotals(id)
-      const tip = (subtotal * this.TIP_PERCENTAGE) / 100
+      // Recalcular subtotal sumando todos los items restantes
+      const newSubtotal = updatedOrder.items.reduce((sum, item) => sum + item.totalPrice, 0)
+      const newTip = (newSubtotal * this.TIP_PERCENTAGE) / 100
+      const newTotal = newSubtotal + newTip
+      
       await this.orderRepository.update(id, { 
-        subtotal, 
-        tip,
-        total
+        subtotal: newSubtotal, 
+        tip: newTip,
+        total: newTotal
       })
       
       // Retornar la orden actualizada con los nuevos totales
@@ -238,16 +249,27 @@ export class OrderUseCase {
       throw new Error('No se puede modificar una orden facturada')
     }
 
+    // Si se actualiza la cantidad, necesitamos recalcular el totalPrice
+    if (updates.quantity) {
+      const item = existingOrder.items.find(item => item.id === itemId)
+      if (item) {
+        updates.totalPrice = item.unitPrice * updates.quantity
+      }
+    }
+
     const updatedOrder = await this.orderRepository.updateItem(id, itemId, updates)
     
     // Recalcular totales después de actualizar
     if (updatedOrder) {
-      const { subtotal, total } = await this.orderRepository.calculateTotals(id)
-      const tip = (subtotal * this.TIP_PERCENTAGE) / 100
+      // Recalcular subtotal sumando todos los items
+      const newSubtotal = updatedOrder.items.reduce((sum, item) => sum + item.totalPrice, 0)
+      const newTip = (newSubtotal * this.TIP_PERCENTAGE) / 100
+      const newTotal = newSubtotal + newTip
+      
       await this.orderRepository.update(id, { 
-        subtotal, 
-        tip,
-        total
+        subtotal: newSubtotal, 
+        tip: newTip,
+        total: newTotal
       })
       
       // Retornar la orden actualizada con los nuevos totales
