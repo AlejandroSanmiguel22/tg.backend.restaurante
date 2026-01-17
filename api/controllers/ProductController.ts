@@ -3,6 +3,7 @@ import { productRepositoryMongo } from '../../infrastructure/repositories/Produc
 import { CategoryRepositoryMongo } from '../../infrastructure/repositories/CategoryRepositoryMongo'
 import { CreateproductUseCase } from '../../domain/useCases/ProductUseCase'
 import { CreateproductDTO } from '../../application/dtos/ProductDTO'
+import { CloudinaryAdapter } from '../../infrastructure/adapters/CloudinaryAdapter'
 
 const productRepo = new productRepositoryMongo()
 const categoryRepo = new CategoryRepositoryMongo()
@@ -43,13 +44,24 @@ export class productController {
     static async update(req: Request, res: Response) : Promise<void> {
         try {
             const productId = req.params.id
-            const data = req.body as CreateproductDTO
+            const data = req.body as CreateproductDTO & { imageBase64?: string }
             const existingproduct = await productRepo.findById(productId)
             if (!existingproduct) {
                 res.status(404).json({ message: 'product not found' })
                 return
             }
-            const updatedproduct = await productRepo.update({ ...existingproduct, ...data })
+
+            // Si se envía una nueva imagen en base64, subirla a Cloudinary
+            let imageUrl = existingproduct.imageUrl
+            if (data.imageBase64 && data.imageBase64.startsWith('data:image')) {
+                imageUrl = await CloudinaryAdapter.uploadImage(data.imageBase64)
+            }
+
+            const updatedproduct = await productRepo.update({ 
+                ...existingproduct, 
+                ...data,
+                imageUrl // Usar la nueva URL o mantener la existente
+            })
             res.json(updatedproduct)
         } catch (error) {
             res.status(400).json({ message: (error as Error).message })

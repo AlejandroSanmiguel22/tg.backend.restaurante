@@ -11,7 +11,8 @@ const PORT = process.env.PORT || 3000
 console.log(`Puerto configurado: ${PORT}`)
 // Middleware global
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ limit: '50mb', extended: true }))
 
 // Ruta raíz de prueba
 app.get('/', (req, res) => {
