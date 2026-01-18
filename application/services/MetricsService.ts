@@ -31,6 +31,21 @@ export class MetricsService {
     private categoryRepository: CategoryRepository
   ) {}
 
+  /**
+   * Normaliza las fechas para incluir el día completo
+   * startDate: inicio del día (00:00:00.000)
+   * endDate: fin del día (23:59:59.999)
+   */
+  private normalizeDateRange(startDate: Date, endDate: Date): { start: Date; end: Date } {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    
+    return { start, end };
+  }
+
   private async getFromCacheOrCalculate<T>(
     cacheKey: string,
     ttl: number,
@@ -162,7 +177,8 @@ export class MetricsService {
       cacheKey,
       300, // 5 minutos
       async () => {
-        const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        const { start, end } = this.normalizeDateRange(startDate, endDate)
+        const orders = await this.orderRepository.findByDateRange(start, end)
         
         const totalSales = orders.reduce((sum, order) => sum + order.total, 0)
         const totalTips = orders.reduce((sum, order) => sum + order.tip, 0)
@@ -204,12 +220,13 @@ export class MetricsService {
       cacheKey,
       300, // 5 minutos
       async () => {
+        const { start, end } = this.normalizeDateRange(startDate, endDate)
         const waiter = await this.waiterRepository.findById(waiterId)
         if (!waiter) {
           throw new Error('Mesero no encontrado')
         }
         
-        const orders = await this.orderRepository.findByWaiterAndDateRange(waiterId, startDate, endDate)
+        const orders = await this.orderRepository.findByWaiterAndDateRange(waiterId, start, end)
         
         const totalSales = orders.reduce((sum, order) => sum + order.total, 0)
         const totalTips = orders.reduce((sum, order) => sum + order.tip, 0)
@@ -249,8 +266,9 @@ export class MetricsService {
       cacheKey,
       300, // 5 minutos
       async () => {
+        const { start, end } = this.normalizeDateRange(startDate, endDate)
         const waiters = await this.waiterRepository.findAll()
-        const allOrders = await this.orderRepository.findByDateRange(startDate, endDate)
+        const allOrders = await this.orderRepository.findByDateRange(start, end)
         
         // Calcular métricas para cada mesero
         const waitersPerformance = await Promise.all(
@@ -318,7 +336,8 @@ export class MetricsService {
       cacheKey,
       300, // 5 minutos
       async () => {
-        const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        const { start, end } = this.normalizeDateRange(startDate, endDate)
+        const orders = await this.orderRepository.findByDateRange(start, end)
         const categories = await this.categoryRepository.findAll()
         
         // Calcular métricas de productos
@@ -446,7 +465,8 @@ export class MetricsService {
       cacheKey,
       300, // 5 minutos
       async () => {
-        const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        const { start, end } = this.normalizeDateRange(startDate, endDate)
+        const orders = await this.orderRepository.findByDateRange(start, end)
         
         const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0)
         const totalTips = orders.reduce((sum, order) => sum + order.tip, 0)
@@ -546,7 +566,8 @@ export class MetricsService {
       cacheKey,
       300, // 5 minutos
       async () => {
-        const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        const { start, end } = this.normalizeDateRange(startDate, endDate)
+        const orders = await this.orderRepository.findByDateRange(start, end)
         const waiters = await this.waiterRepository.findAll()
         
         const totalSales = orders.reduce((sum, order) => sum + order.total, 0)
@@ -594,12 +615,13 @@ export class MetricsService {
       cacheKey,
       300, // 5 minutos
       async () => {
+        const { start, end } = this.normalizeDateRange(startDate, endDate)
         const waiter = await this.waiterRepository.findById(waiterId)
         if (!waiter) {
           throw new Error('Mesero no encontrado')
         }
         
-        const orders = await this.orderRepository.findByWaiterAndDateRange(waiterId, startDate, endDate)
+        const orders = await this.orderRepository.findByWaiterAndDateRange(waiterId, start, end)
         
         const totalSales = orders.reduce((sum, order) => sum + order.total, 0)
         const totalTips = orders.reduce((sum, order) => sum + order.tip, 0)
@@ -642,7 +664,8 @@ export class MetricsService {
       cacheKey,
       300, // 5 minutos
       async () => {
-        const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        const { start, end } = this.normalizeDateRange(startDate, endDate)
+        const orders = await this.orderRepository.findByDateRange(start, end)
         const categories = await this.categoryRepository.findAll()
         
         // Agrupar productos por categoría
@@ -718,8 +741,9 @@ export class MetricsService {
       cacheKey,
       300, // 5 minutos
       async () => {
-        console.log(`Calculando producto más vendido para rango: ${startDate.toISOString().split('T')[0]} - ${endDate.toISOString().split('T')[0]}`)
-        const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        const { start, end } = this.normalizeDateRange(startDate, endDate)
+        console.log(`Calculando producto más vendido para rango: ${start.toISOString().split('T')[0]} - ${end.toISOString().split('T')[0]}`)
+        const orders = await this.orderRepository.findByDateRange(start, end)
         console.log(`Órdenes encontradas: ${orders.length}`)
         
         const productCounts = new Map<string, number>()
@@ -775,8 +799,9 @@ export class MetricsService {
       cacheKey,
       300, // 5 minutos
       async () => {
-        console.log(`Calculando producto menos vendido para rango: ${startDate.toISOString().split('T')[0]} - ${endDate.toISOString().split('T')[0]}`)
-        const orders = await this.orderRepository.findByDateRange(startDate, endDate)
+        const { start, end } = this.normalizeDateRange(startDate, endDate)
+        console.log(`Calculando producto menos vendido para rango: ${start.toISOString().split('T')[0]} - ${end.toISOString().split('T')[0]}`)
+        const orders = await this.orderRepository.findByDateRange(start, end)
         console.log(`Órdenes encontradas: ${orders.length}`)
         
         const productCounts = new Map<string, number>()
