@@ -9,7 +9,7 @@ export interface Table {
   updatedAt: Date
 }
 
-export type TableStatus = 'libre' | 'atendida'
+export type TableStatus = 'libre' | 'atendida' | 'ocupada'
 
 export interface TableWithOrder extends Table {
   currentOrder?: {

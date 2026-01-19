@@ -148,7 +148,30 @@ export class OrderUseCase {
       throw new Error('No se puede cambiar el estado de una orden facturada')
     }
 
-    return await this.orderRepository.updateStatus(id, updateStatusDTO.status)
+    const updatedOrder = await this.orderRepository.updateStatus(id, updateStatusDTO.status)
+
+    // Actualizar el estado de la mesa según el estado de la orden
+    if (updatedOrder) {
+      let tableStatus: TableStatus
+      
+      switch (updateStatusDTO.status) {
+        case 'en_cocina':
+          tableStatus = 'atendida'
+          break
+        case 'entregado':
+          tableStatus = 'ocupada'
+          break
+        case 'facturada':
+          tableStatus = 'libre'
+          break
+        default:
+          tableStatus = 'atendida'
+      }
+      
+      await this.tableRepository.updateStatus(existingOrder.tableId, tableStatus)
+    }
+
+    return updatedOrder
   }
 
   async addItems(id: string, addItemsDTO: AddOrderItemsDTO): Promise<Order | null> {

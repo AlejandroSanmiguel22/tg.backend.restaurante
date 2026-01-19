@@ -9,7 +9,7 @@ const TableSchema = new Schema({
   },
   status: { 
     type: String, 
-    enum: ['libre', 'atendida'], 
+    enum: ['libre', 'atendida', 'ocupada'], 
     default: 'libre',
     required: true 
   },
