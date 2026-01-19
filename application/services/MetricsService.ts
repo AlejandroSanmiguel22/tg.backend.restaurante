@@ -180,7 +180,7 @@ export class MetricsService {
         const { start, end } = this.normalizeDateRange(startDate, endDate)
         const orders = await this.orderRepository.findByDateRange(start, end)
         
-        const totalSales = orders.filter(order => order.status === 'facturada').reduce((sum, order) => sum + order.total, 0)
+        const totalSales = orders.filter(order => order.status === 'facturada').reduce((sum, order) => sum + order.subtotal, 0)
         const totalTips = orders.filter(order => order.status === 'facturada').reduce((sum, order) => sum + order.tip, 0)
         const averageOrderValue = orders.length > 0 ? totalSales / orders.length : 0
         
