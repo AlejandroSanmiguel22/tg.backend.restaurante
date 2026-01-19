@@ -189,7 +189,7 @@ export class MetricsService {
         orders.forEach(order => {
           const date = order.createdAt.toISOString().split('T')[0]
           const existing = salesByDay.get(date) || { sales: 0, orders: 0 }
-          existing.sales += order.total
+          existing.sales += order.subtotal
           existing.orders += 1
           salesByDay.set(date, existing)
         })
