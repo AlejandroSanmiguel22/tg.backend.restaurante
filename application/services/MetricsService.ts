@@ -181,7 +181,7 @@ export class MetricsService {
         const orders = await this.orderRepository.findByDateRange(start, end)
         
         const totalSales = orders.reduce((sum, order) => sum + order.total, 0)
-        const totalTips = orders.reduce((sum, order) => sum + order.tip, 0)
+        const totalTips = orders.filter(order => order.status === 'facturada').reduce((sum, order) => sum + order.tip, 0)
         const averageOrderValue = orders.length > 0 ? totalSales / orders.length : 0
         
         // Agrupar por día
@@ -743,6 +743,18 @@ export class MetricsService {
       async () => {
         const { start, end } = this.normalizeDateRange(startDate, endDate)
         console.log(`Calculando producto más vendido para rango: ${start.toISOString().split('T')[0]} - ${end.toISOString().split('T')[0]}`)
+        
+        // Buscar la categoría "Arroces"
+        const categories = await this.categoryRepository.findAll()
+        const arrocesCategory = categories.find(cat => cat.name === 'Arroces')
+        
+        if (!arrocesCategory) {
+          console.log('Categoría "Arroces" no encontrada')
+          return { product: null }
+        }
+        
+        console.log(`Categoría "Arroces" encontrada con ID: ${arrocesCategory.id}`)
+        
         const orders = await this.orderRepository.findByDateRange(start, end)
         console.log(`Órdenes encontradas: ${orders.length}`)
         
@@ -762,13 +774,13 @@ export class MetricsService {
         // Ordenar productos por cantidad vendida (descendente)
         const sortedProducts = Array.from(productCounts.entries()).sort((a, b) => b[1] - a[1])
         
-        // Buscar el primer producto que existe en la base de datos
+        // Buscar el primer producto que existe en la base de datos y pertenece a "Arroces"
         for (const [productId, totalSold] of sortedProducts) {
           console.log(`Verificando producto ID: ${productId}, cantidad: ${totalSold}`)
           const product = await this.productRepository.findById(productId)
           
-          if (product) {
-            console.log(`Producto encontrado: ${product.name}`)
+          if (product && product.categoryId === arrocesCategory.id) {
+            console.log(`Producto de categoría Arroces encontrado: ${product.name}`)
             return { 
               product: { 
                 name: product.name, 
@@ -776,12 +788,14 @@ export class MetricsService {
                 totalSold 
               } 
             }
+          } else if (product) {
+            console.log(`Producto ${product.name} no pertenece a la categoría Arroces`)
           } else {
             console.log(`Producto con ID ${productId} no encontrado en la base de datos`)
           }
         }
         
-        console.log('Ninguno de los productos vendidos existe en la base de datos')
+        console.log('Ningún producto de la categoría "Arroces" fue vendido en el rango de fechas')
         return { product: null }
       }
     )
@@ -801,6 +815,18 @@ export class MetricsService {
       async () => {
         const { start, end } = this.normalizeDateRange(startDate, endDate)
         console.log(`Calculando producto menos vendido para rango: ${start.toISOString().split('T')[0]} - ${end.toISOString().split('T')[0]}`)
+        
+        // Buscar la categoría "Arroces"
+        const categories = await this.categoryRepository.findAll()
+        const arrocesCategory = categories.find(cat => cat.name === 'Arroces')
+        
+        if (!arrocesCategory) {
+          console.log('Categoría "Arroces" no encontrada')
+          return { product: null }
+        }
+        
+        console.log(`Categoría "Arroces" encontrada con ID: ${arrocesCategory.id}`)
+        
         const orders = await this.orderRepository.findByDateRange(start, end)
         console.log(`Órdenes encontradas: ${orders.length}`)
         
@@ -820,13 +846,13 @@ export class MetricsService {
         // Ordenar productos por cantidad vendida (ascendente)
         const sortedProducts = Array.from(productCounts.entries()).sort((a, b) => a[1] - b[1])
         
-        // Buscar el primer producto que existe en la base de datos
+        // Buscar el primer producto que existe en la base de datos y pertenece a "Arroces"
         for (const [productId, totalSold] of sortedProducts) {
           console.log(`Verificando producto ID: ${productId}, cantidad: ${totalSold}`)
           const product = await this.productRepository.findById(productId)
           
-          if (product) {
-            console.log(`Producto encontrado: ${product.name}`)
+          if (product && product.categoryId === arrocesCategory.id) {
+            console.log(`Producto de categoría Arroces encontrado: ${product.name}`)
             return { 
               product: { 
                 name: product.name, 
@@ -834,12 +860,14 @@ export class MetricsService {
                 totalSold 
               } 
             }
+          } else if (product) {
+            console.log(`Producto ${product.name} no pertenece a la categoría Arroces`)
           } else {
             console.log(`Producto con ID ${productId} no encontrado en la base de datos`)
           }
         }
         
-        console.log('Ninguno de los productos vendidos existe en la base de datos')
+        console.log('Ningún producto de la categoría "Arroces" fue vendido en el rango de fechas')
         return { product: null }
       }
     )
