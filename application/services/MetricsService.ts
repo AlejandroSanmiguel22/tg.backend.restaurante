@@ -180,7 +180,7 @@ export class MetricsService {
         const { start, end } = this.normalizeDateRange(startDate, endDate)
         const orders = await this.orderRepository.findByDateRange(start, end)
         
-        const totalSales = orders.reduce((sum, order) => sum + order.total, 0)
+        const totalSales = orders.filter(order => order.status === 'facturada' || order.status === 'entregado').reduce((sum, order) => sum + order.total, 0)
         const totalTips = orders.filter(order => order.status === 'facturada').reduce((sum, order) => sum + order.tip, 0)
         const averageOrderValue = orders.length > 0 ? totalSales / orders.length : 0
         
@@ -919,8 +919,12 @@ export class MetricsService {
         }
 
         // Contar órdenes por hora dentro del rango (acumulado de todos los días)
+        // Convertir a hora de Colombia (UTC-5)
         orders.forEach((order) => {
-          const orderHour = order.createdAt.getHours();
+          // Convertir UTC a UTC-5 (Colombia)
+          const colombiaDate = new Date(order.createdAt.getTime() - (5 * 60 * 60 * 1000));
+          const orderHour = colombiaDate.getHours();
+          
           if (orderHour >= START_HOUR && orderHour <= END_HOUR) {
             const index = orderHour - START_HOUR;
             hourlyFlow[index].ordersCount += 1;
